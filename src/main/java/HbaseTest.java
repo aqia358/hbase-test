@@ -71,6 +71,8 @@ public class HbaseTest {
             }
           }
         }
+      } else {
+        filelist.add(file);
       }
     }
   }
