@@ -1,8 +1,7 @@
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +17,7 @@ public class HbaseTest {
   public static final LinkedBlockingQueue<String> strlist = new LinkedBlockingQueue<String>();
   private static final LinkedBlockingQueue<File> filelist = new LinkedBlockingQueue<File>();
   private static final Log log = LogFactory.getLog(HbaseTest.class);
-  public static final ConcurrentSet<Long> responseTime = new ConcurrentSet<>();
+  public static final ConcurrentLinkedQueue<Long> responseTime = new ConcurrentLinkedQueue<>();
 
   private static String getDateStr() {
     return DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
@@ -84,6 +83,7 @@ public class HbaseTest {
 
     print("Test end time: " + getDateStr());
     List<Long> timeList = new ArrayList<>(responseTime);
+    Collections.sort(timeList);
     calcResult(timeList);
     print("10%~90% result:");
     timeList = timeList.subList((int)(timeList.size()*0.1), (int)(timeList.size()*0.9));
