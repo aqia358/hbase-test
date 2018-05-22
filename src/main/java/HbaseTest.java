@@ -55,6 +55,7 @@ public class HbaseTest {
       BatchGet bg = new BatchGet(zookeeper, port, parent, tablename, family, qualiy, batch);
       Thread td = new Thread(bg);
       td.start();
+      log.info("Start thread " + i);
     }
   }
 
@@ -104,6 +105,7 @@ public class HbaseTest {
         e.printStackTrace();
       }
     }
+    log.info("File lines: " +  strlist.size());
   }
 
 }

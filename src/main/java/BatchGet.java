@@ -70,6 +70,7 @@ public class BatchGet implements Runnable {
         e.printStackTrace();
       }
       if (null == str) {
+        log.warn("get null line data");
         break;
       }
 
