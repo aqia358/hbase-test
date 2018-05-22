@@ -17,10 +17,14 @@ public class HbaseTest {
   public static final LinkedBlockingQueue<String> strlist = new LinkedBlockingQueue<String>();
   private static final LinkedBlockingQueue<File> filelist = new LinkedBlockingQueue<File>();
   private static final Log log = LogFactory.getLog(HbaseTest.class);
-  public static final ConcurrentLinkedQueue<Long> responseTime = new ConcurrentLinkedQueue<>();
+  public static final ConcurrentLinkedQueue<Long> responseTime = new ConcurrentLinkedQueue<Long>();
 
   private static String getDateStr() {
     return DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
+  }
+
+  public static void addTime(long time) {
+    responseTime.add(time);
   }
 
   public static void main(String[] args) throws Exception {

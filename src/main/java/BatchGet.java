@@ -93,7 +93,7 @@ public class BatchGet implements Runnable {
           long end = System.currentTimeMillis();
           long cust = end - begin;
           log.info("batch: " + size + ", time: " + cust);
-          HbaseTest.responseTime.add(cust);
+          HbaseTest.addTime(cust);
         }
       }
     }
