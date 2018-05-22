@@ -1,8 +1,16 @@
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
+import io.netty.util.internal.ConcurrentSet;
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -10,8 +18,13 @@ public class HbaseTest {
   public static final LinkedBlockingQueue<String> strlist = new LinkedBlockingQueue<String>();
   private static final LinkedBlockingQueue<File> filelist = new LinkedBlockingQueue<File>();
   private static final Log log = LogFactory.getLog(HbaseTest.class);
+  public static final ConcurrentSet<Long> responseTime = new ConcurrentSet<>();
 
-  public static void main(String[] args) {
+  private static String getDateStr() {
+    return DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
+  }
+
+  public static void main(String[] args) throws Exception {
     String path = null;
     int threads = 0;
     String zookeeper = null;
@@ -51,12 +64,31 @@ public class HbaseTest {
     FilesList(path);
     ReadFile();
 
+    List<Thread> threadList = Lists.newArrayList();
     for (int i = 0; i < threads; i++) {
       BatchGet bg = new BatchGet(zookeeper, port, parent, tablename, family, qualiy, batch);
       Thread td = new Thread(bg);
       td.start();
+      threadList.add(td);
       log.info("Start thread " + i);
     }
+
+    System.out.println("Test start time: " + getDateStr());
+    for (Thread t : threadList) {
+      t.join();
+    }
+
+    List<Long> timeList = new ArrayList<>(responseTime);
+    int size = responseTime.size();
+    long total = 0;
+    for (long time : timeList) {
+      total += time;
+    }
+    System.out.println("Test end time: " + getDateStr());
+    log.info("Average Delay: " + (total / size) + " ms");
+    log.info(String.format("Percentile 0.50, 0.75, 0.90, 0.95, 0.99: %d %d %d %d %d",
+        timeList.get((int)(size*0.5)), timeList.get((int)(size*0.75)),
+        timeList.get((int)(size*0.90)),timeList.get((int)(size*0.95)),timeList.get((int)(size*0.99))));
   }
 
   private static void FilesList(String dir) {
