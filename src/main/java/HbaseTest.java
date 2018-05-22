@@ -75,15 +75,23 @@ public class HbaseTest {
 
     System.out.println("Test start time: " + getDateStr());
     for (Thread t : threadList) {
-      t.join();
+      try {
+        t.join();
+      } catch (Exception e) {
+        log.error("Join thread fail", e);
+      }
     }
 
-    System.out.println("Test end time: " + getDateStr());
+    print("Test end time: " + getDateStr());
     List<Long> timeList = new ArrayList<>(responseTime);
     calcResult(timeList);
-    log.info("10% ~90% result:");
+    print("10%~90% result:");
     timeList = timeList.subList((int)(timeList.size()*0.1), (int)(timeList.size()*0.9));
     calcResult(timeList);
+  }
+
+  private static void print(String str) {
+    System.out.println(str);
   }
 
   private static void calcResult(List<Long> timeList) {
@@ -92,8 +100,8 @@ public class HbaseTest {
     for (long time : timeList) {
       total += time;
     }
-    log.info("Average Delay: " + (total / size) + " ms  Size: " + size);
-    log.info(String.format("Percentile 0.50, 0.75, 0.90, 0.95, 0.99: %d %d %d %d %d",
+    print("Average Delay: " + (total / size) + " ms  Size: " + size);
+    print(String.format("Percentile 0.50, 0.75, 0.90, 0.95, 0.99: %d %d %d %d %d",
         timeList.get((int)(size*0.5)), timeList.get((int)(size*0.75)),
         timeList.get((int)(size*0.90)),timeList.get((int)(size*0.95)),timeList.get((int)(size*0.99))));
   }
