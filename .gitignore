@@ -1,3 +1,15 @@
-.idea
+*.sw?
+.#*
+*#
+*~
+.classpath
+.project
+.settings
+build
 target
+deploy
 out
+lib
+.idea
+*.iml
+
