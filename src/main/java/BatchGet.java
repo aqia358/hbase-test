@@ -63,6 +63,7 @@ public class BatchGet implements Runnable {
     List<Row> batch = new ArrayList<Row>();
 
     String str = null;
+    int count = 0;
     while (true) {
       try {
         str = HbaseTest.strlist.poll(3, TimeUnit.SECONDS);
@@ -84,44 +85,28 @@ public class BatchGet implements Runnable {
         long begin = System.currentTimeMillis();
         try {
           ht.batch(batch);
-          batch.clear();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (IOException e) {
-          e.printStackTrace();
+          count++;
+        } catch (Throwable t) {
+          log.error("batchGetFail", t);
         } finally {
+          batch.clear();
           long end = System.currentTimeMillis();
           long cust = end - begin;
           log.info("batch: " + size + ", time: " + cust);
         }
       }
-
     }
-
-    int size = batch.size();
-    if (size > 0) {
-      long begin = System.currentTimeMillis();
+    log.info("ThreadRunLoop: " + count);
+    if (ht != null) {
       try {
-        ht.batch(batch);
-        batch.clear();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+        ht.close();
+        System.gc();
       } catch (IOException e) {
         e.printStackTrace();
-      } finally {
-        long end = System.currentTimeMillis();
-        long cust = end - begin;
-        log.info("batch: " + size + ", time: " + cust);
-        if (ht != null) {
-          try {
-            ht.close();
-            System.gc();
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        }
       }
     }
 
   }
+
+
 }
