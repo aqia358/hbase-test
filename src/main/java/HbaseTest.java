@@ -78,14 +78,21 @@ public class HbaseTest {
       t.join();
     }
 
+    System.out.println("Test end time: " + getDateStr());
     List<Long> timeList = new ArrayList<>(responseTime);
-    int size = responseTime.size();
+    calcResult(timeList);
+    log.info("10% ~90% result:");
+    timeList = timeList.subList((int)(timeList.size()*0.1), (int)(timeList.size()*0.9));
+    calcResult(timeList);
+  }
+
+  private static void calcResult(List<Long> timeList) {
     long total = 0;
+    int size = timeList.size();
     for (long time : timeList) {
       total += time;
     }
-    System.out.println("Test end time: " + getDateStr());
-    log.info("Average Delay: " + (total / size) + " ms");
+    log.info("Average Delay: " + (total / size) + " ms  Size: " + size);
     log.info(String.format("Percentile 0.50, 0.75, 0.90, 0.95, 0.99: %d %d %d %d %d",
         timeList.get((int)(size*0.5)), timeList.get((int)(size*0.75)),
         timeList.get((int)(size*0.90)),timeList.get((int)(size*0.95)),timeList.get((int)(size*0.99))));
