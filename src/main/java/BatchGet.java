@@ -2,6 +2,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -83,8 +84,12 @@ public class BatchGet implements Runnable {
       int size = batch.size();
       if (size > 0 && (size % _batch == 0)) {
         long begin = System.currentTimeMillis();
+        long dataSize = 0;
         try {
-          ht.batch(batch);
+          Object[] results = ht.batch(batch);
+          for (Object result : results) {
+            dataSize += getRowSize((Result)result);
+          }
           count++;
         } catch (Throwable t) {
           log.error("batchGetFail", t);
@@ -94,6 +99,7 @@ public class BatchGet implements Runnable {
           long cust = end - begin;
           log.info("batch: " + size + ", time: " + cust);
           HbaseTest.addTime(cust);
+          HbaseTest.addDataSize(dataSize);
         }
       }
     }
@@ -109,5 +115,16 @@ public class BatchGet implements Runnable {
 
   }
 
+  private long getRowSize(Result result) {
+    long size = 0;
+    if (result != null) {
+      byte[] value = result.getValue(_FAMILY, _QUALITY);
+      if (value != null) {
+        size += value.length;
+      }
+    }
+
+    return size;
+  }
 
 }

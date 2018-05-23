@@ -17,7 +17,9 @@ public class HbaseTest {
   public static final LinkedBlockingQueue<String> strlist = new LinkedBlockingQueue<String>();
   private static final LinkedBlockingQueue<File> filelist = new LinkedBlockingQueue<File>();
   private static final Log log = LogFactory.getLog(HbaseTest.class);
-  public static final ConcurrentLinkedQueue<Long> responseTime = new ConcurrentLinkedQueue<Long>();
+  private static final ConcurrentLinkedQueue<Long> responseTime = new ConcurrentLinkedQueue<Long>();
+  private static final ConcurrentLinkedQueue<Long> responseData = new ConcurrentLinkedQueue<Long>();
+
 
   private static String getDateStr() {
     return DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
@@ -25,6 +27,10 @@ public class HbaseTest {
 
   public static void addTime(long time) {
     responseTime.add(time);
+  }
+
+  public static void addDataSize(long size) {
+    responseData.add(size);
   }
 
   public static void main(String[] args) throws Exception {
@@ -76,6 +82,7 @@ public class HbaseTest {
       log.info("Start thread " + i);
     }
 
+    long startTime = System.currentTimeMillis();
     System.out.println("Test start time: " + getDateStr());
     for (Thread t : threadList) {
       try {
@@ -84,31 +91,47 @@ public class HbaseTest {
         log.error("Join thread fail", e);
       }
     }
-
     print("Test end time: " + getDateStr());
+    print("\n\n");
+
+    long endTime = System.currentTimeMillis();
+    print("************************************ Test Result ************************************");
+    print("Report time: " + getDateStr());
+    print(String.format("Test Duration: %ds, Requests: %d, batchSize: %d, QPS: %d", (endTime - startTime) / 1000, responseTime.size(),
+        batch, (int)(responseTime.size() / ((endTime - startTime)/1000.0))));
+
     List<Long> timeList = new ArrayList<>(responseTime);
-    Collections.sort(timeList);
-    calcResult(timeList);
-    print("10%~90% result:");
-    timeList = timeList.subList((int)(timeList.size()*0.1), (int)(timeList.size()*0.9));
-    calcResult(timeList);
+    List<Long> sizeList = new ArrayList<>(responseData);
+    printResult("Response Delay: ", timeList);
+    printResult("Response Data Size: ", sizeList);
+
   }
 
   private static void print(String str) {
     System.out.println(str);
   }
 
-  private static void calcResult(List<Long> timeList) {
+  private static void printResult(String title, List<Long> list) {
+    Collections.sort(list);
+    print(title);
+    calcResult(list);
+    print("10%~90% result:");
+    list = list.subList((int)(list.size()*0.1), (int)(list.size()*0.9));
+    calcResult(list);
+  }
+
+  private static void calcResult(List<Long> list) {
     long total = 0;
-    int size = timeList.size();
-    for (long time : timeList) {
+    int size = list.size();
+    for (long time : list) {
       total += time;
     }
-    print("Average Delay: " + (total / size) + " ms  Size: " + size);
+    print("Average: " + (total / size) + "  Size: " + size);
     print(String.format("Percentile 0.50, 0.75, 0.90, 0.95, 0.99: %d %d %d %d %d",
-        timeList.get((int)(size*0.5)), timeList.get((int)(size*0.75)),
-        timeList.get((int)(size*0.90)),timeList.get((int)(size*0.95)),timeList.get((int)(size*0.99))));
+        list.get((int)(size*0.50)), list.get((int)(size*0.75)),
+        list.get((int)(size*0.90)), list.get((int)(size*0.95)), list.get((int)(size*0.99))));
   }
+
 
   private static void FilesList(String dir) {
     if (null != dir && dir.trim().length() > 0) {
