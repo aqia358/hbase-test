@@ -126,5 +126,4 @@ public class BatchGet implements Runnable {
 
     return size;
   }
-
 }

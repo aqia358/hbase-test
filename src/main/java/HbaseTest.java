@@ -97,7 +97,8 @@ public class HbaseTest {
     long endTime = System.currentTimeMillis();
     print("************************************ Test Result ************************************");
     print("Report time: " + getDateStr());
-    print(String.format("Test Duration: %ds, Requests: %d, batchSize: %d, QPS: %d", (endTime - startTime) / 1000, responseTime.size(),
+    print(String.format("Test Duration: %ds, Threads: %d, Requests: %d, batchSize: %d, QPS: %d",
+        (endTime - startTime) / 1000, threads, responseTime.size(),
         batch, (int)(responseTime.size() / ((endTime - startTime)/1000.0))));
 
     List<Long> timeList = new ArrayList<>(responseTime);
