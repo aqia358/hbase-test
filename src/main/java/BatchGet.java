@@ -1,9 +1,7 @@
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
@@ -14,9 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class BatchGet implements Runnable {
   private static final Log log = LogFactory.getLog(BatchGet.class);
 
-  String _zookeeper = null;
-  String _port = null;
-  String _parent = null;
+  Connection connection;
   String _tablename = null;
   String _family = null;
   String _quality = null;
@@ -24,10 +20,8 @@ public class BatchGet implements Runnable {
   byte[] _QUALITY = null;
   int _batch = 0;
 
-  public BatchGet(String _zookeeper, String _port, String _parent, String _tablename, String _family, String _quality, int _batch) {
-    this._zookeeper = _zookeeper;
-    this._port = _port;
-    this._parent = _parent;
+  public BatchGet(Connection connection, String _tablename, String _family, String _quality, int _batch) {
+    this.connection = connection;
     this._tablename = _tablename;
     this._family = _family;
     this._quality = _quality;
@@ -52,15 +46,6 @@ public class BatchGet implements Runnable {
   }
 
   private void batch2Hbase() {
-    HTable ht = null;
-    try {
-      ht = new HTable(HbaseConnect.connection(_zookeeper, _parent, _port), _tablename);
-      ht.setWriteBufferSize(8 * 1024 * 1024);
-      ht.setAutoFlush(false, false);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
     List<Row> batch = new ArrayList<Row>();
 
     String str = null;
@@ -83,9 +68,11 @@ public class BatchGet implements Runnable {
 
       int size = batch.size();
       if (size > 0 && (size % _batch == 0)) {
+        Table ht = null;
         long begin = System.currentTimeMillis();
         long dataSize = 0;
         try {
+          ht = connection.getTable(TableName.valueOf(_tablename));
           Object[] results = ht.batch(batch);
           for (Object result : results) {
             dataSize += getRowSize((Result)result);
@@ -94,24 +81,25 @@ public class BatchGet implements Runnable {
         } catch (Throwable t) {
           log.error("batchGetFail", t);
         } finally {
-          batch.clear();
           long end = System.currentTimeMillis();
           long cust = end - begin;
+          if (ht != null) {
+            try {
+              ht.close();
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          }
+          batch.clear();
           log.info("batch: " + size + ", time: " + cust);
+          if (count == 1)
+            continue;
           HbaseTest.addTime(cust);
           HbaseTest.addDataSize(dataSize);
         }
       }
     }
     log.info("ThreadRunLoop: " + count);
-    if (ht != null) {
-      try {
-        ht.close();
-        System.gc();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
 
   }
 
@@ -122,6 +110,7 @@ public class BatchGet implements Runnable {
       if (value != null) {
         size += value.length;
       }
+      System.out.println(String.valueOf(value));
     }
 
     return size;

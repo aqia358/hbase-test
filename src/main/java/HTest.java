@@ -1,0 +1,104 @@
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.apache.commons.cli.*;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+public class HTest {
+
+    public static final LinkedBlockingQueue<String> keylist = new LinkedBlockingQueue<String>();
+
+    private static void readFile(String path) {
+        File file = new File(path.trim());
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+        BufferedReader reader = new BufferedReader(isr);
+
+        String line = null;
+        try {
+            while (null != (line = reader.readLine())) {
+                keylist.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        String keys = "";
+//        String[] a = keys.split(",");
+//        for (String tmp: Arrays.asList(keys.split(",")))
+//            keylist.add(tmp);
+    }
+
+    public static void main(String[] args) throws Exception {
+        CommandLineParser parser = new BasicParser();
+        Options options = new Options();
+        options.addOption("h", "help", false, "Print this usage information");
+        options.addOption("z", "zookeeper", false, "Print out VERBOSE information");
+        options.addOption("p", "parent", true, "File to save program output to");
+        options.addOption("P", "port", true, "File to save program output to");
+        options.addOption("t", "tablename", true, "File to save program output to");
+        options.addOption("f", "family", true, "File to save program output to");
+        options.addOption("F", "file", true, "File to save program output to");
+        // Parse the program arguments
+        CommandLine commandLine = parser.parse(options, args);
+
+        String zookeeper = commandLine.getOptionValue("z", "10.189.200.45");
+        String port = commandLine.getOptionValue("P", "2181");
+        String parent = commandLine.getOptionValue("p", "/hbase");
+        String tablename = commandLine.getOptionValue("t", "fg_user_features_hbase");
+        String family = commandLine.getOptionValue("q", "f");
+        String qualiy = commandLine.getOptionValue("q", "features");
+        String file = commandLine.getOptionValue("F", "features");
+
+        MetricRegistry registry = new MetricRegistry();
+
+        readFile(file);
+
+        Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
+
+        byte[] hFamily = Bytes.toBytes(family);
+        byte[] hQualiy = Bytes.toBytes(qualiy);
+        Table ht = connection.getTable(TableName.valueOf(tablename));
+        List<Row> batch = new ArrayList<Row>();
+
+//        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+
+        final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build();
+        reporter.start(1, TimeUnit.MINUTES);
+
+        Timer t = registry.timer("test");
+
+        for (String keys : keylist) {
+            for (String key : keys.split(",")) {
+                byte[] rowkey = Bytes.toBytes(key);
+                Get get = new Get(rowkey);
+                get.addColumn(hFamily, hQualiy);
+                batch.add(get);
+            }
+            long s = System.currentTimeMillis();
+            Object[] results = ht.batch(batch);
+            long e = System.currentTimeMillis();
+            System.out.println("result:" + results.length + ", time:" + (e - s));
+        }
+
+
+    }
+}
