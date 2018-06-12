@@ -74,7 +74,6 @@ public class HTest {
         byte[] hFamily = Bytes.toBytes(family);
         byte[] hQualiy = Bytes.toBytes(qualiy);
         Table ht = connection.getTable(TableName.valueOf(tablename));
-        List<Row> batch = new ArrayList<Row>();
 
 //        SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
@@ -86,18 +85,20 @@ public class HTest {
 
         Timer t = registry.timer("test");
 
-        for (String keys : keylist) {
-            for (String key : keys.split(",")) {
-                byte[] rowkey = Bytes.toBytes(key);
-                Get get = new Get(rowkey);
-                get.addColumn(hFamily, hQualiy);
-                batch.add(get);
+        for (int i = 0; i < 100; i++)
+            for (String keys : keylist) {
+                List<Row> batch = new ArrayList<Row>();
+                for (String key : keys.split(",")) {
+                    byte[] rowkey = Bytes.toBytes(key);
+                    Get get = new Get(rowkey);
+                    get.addColumn(hFamily, hQualiy);
+                    batch.add(get);
+                }
+                long s = System.currentTimeMillis();
+                Object[] results = ht.batch(batch);
+                long e = System.currentTimeMillis();
+                System.out.println("result:" + results.length + ", time:" + (e - s));
             }
-            long s = System.currentTimeMillis();
-            Object[] results = ht.batch(batch);
-            long e = System.currentTimeMillis();
-            System.out.println("result:" + results.length + ", time:" + (e - s));
-        }
 
 
     }
