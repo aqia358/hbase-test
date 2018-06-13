@@ -12,12 +12,19 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class HTest {
 
     public static final LinkedBlockingQueue<String> keylist = new LinkedBlockingQueue<String>();
+    public static MetricRegistry registry = new MetricRegistry();
+    public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .build();
+    public static Timer t = registry.timer("test");
 
     private static void readFile(String path) {
         File file = new File(path.trim());
@@ -65,27 +72,20 @@ public class HTest {
         String qualiy = commandLine.getOptionValue("q", "features");
         String file = commandLine.getOptionValue("F", "features");
 
-        MetricRegistry registry = new MetricRegistry();
+        reporter.start(1, TimeUnit.MINUTES);
 
         readFile(file);
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
 
+
+    }
+
+    public static void testBatchGet(String family, String qualiy, String tablename, Connection connection) throws Exception {
         byte[] hFamily = Bytes.toBytes(family);
         byte[] hQualiy = Bytes.toBytes(qualiy);
         Table ht = connection.getTable(TableName.valueOf(tablename));
-
-//        SimpleMeterRegistry registry = new SimpleMeterRegistry();
-
-        final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build();
-        reporter.start(1, TimeUnit.MINUTES);
-
-        Timer t = registry.timer("test");
-
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 100; i++) {
             for (String keys : keylist) {
                 List<Row> batch = new ArrayList<Row>();
                 for (String key : keys.split(",")) {
@@ -94,12 +94,15 @@ public class HTest {
                     get.addColumn(hFamily, hQualiy);
                     batch.add(get);
                 }
-                long s = System.currentTimeMillis();
-                Object[] results = ht.batch(batch);
-                long e = System.currentTimeMillis();
-                System.out.println("result:" + results.length + ", time:" + (e - s));
+                t.time((Callable<Void>) () -> {
+                    long s = System.currentTimeMillis();
+                    Object[] results = ht.batch(batch);
+                    long e = System.currentTimeMillis();
+                    System.out.println("result:" + results.length + ", time:" + (e - s));
+                    return null;
+                });
             }
-
+        }
 
     }
 }
