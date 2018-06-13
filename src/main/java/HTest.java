@@ -72,7 +72,7 @@ public class HTest {
         String qualiy = commandLine.getOptionValue("q", "features");
         String file = commandLine.getOptionValue("F", "features");
 
-        reporter.start(1, TimeUnit.MINUTES);
+        reporter.start(1, TimeUnit.SECONDS);
 
         readFile(file);
 
