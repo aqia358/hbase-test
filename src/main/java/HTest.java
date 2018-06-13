@@ -77,7 +77,7 @@ public class HTest {
         readFile(file);
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
-
+        testBatchGet(family, qualiy, tablename, connection);
 
     }
 
