@@ -77,7 +77,8 @@ public class HTest {
         readFile(file);
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
-        testBatchGet(family, qualiy, tablename, connection);
+//        testBatchGet(family, qualiy, tablename, connection);
+        testGet(family, qualiy, tablename, connection);
 
     }
 
@@ -105,4 +106,32 @@ public class HTest {
         }
 
     }
+
+    public static void testGet(String family, String qualiy, String tablename, Connection connection) throws Exception {
+        byte[] hFamily = Bytes.toBytes(family);
+        byte[] hQualiy = Bytes.toBytes(qualiy);
+        Table ht = connection.getTable(TableName.valueOf(tablename));
+        for (int i = 0; i < 100; i++) {
+            for (String keys : keylist) {
+                List<Row> batch = new ArrayList<Row>();
+                for (String key : keys.split(",")) {
+                    byte[] rowkey = Bytes.toBytes(key);
+                    Get get = new Get(rowkey);
+                    get.addColumn(hFamily, hQualiy);
+                    batch.add(get);
+                    t.time((Callable<Void>) () -> {
+                        long s = System.currentTimeMillis();
+                        Result result = ht.get(get);
+                        long e = System.currentTimeMillis();
+                        System.out.println("result:" + 1 + ", time:" + (e - s));
+                        return null;
+                    });
+                }
+
+            }
+        }
+
+    }
+//    Result result = table.get(get);
+
 }
