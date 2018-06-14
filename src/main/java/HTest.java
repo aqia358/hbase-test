@@ -97,7 +97,8 @@ public class HTest {
                 }
                 t.time((Callable<Void>) () -> {
                     long s = System.currentTimeMillis();
-                    Object[] results = ht.batch(batch);
+                    Object[] results = new Object[batch.size()];
+                    ht.batch(batch, results);
                     long e = System.currentTimeMillis();
                     System.out.println("result:" + results.length + ", time:" + (e - s));
                     return null;

@@ -73,7 +73,8 @@ public class BatchGet implements Runnable {
         long dataSize = 0;
         try {
           ht = connection.getTable(TableName.valueOf(_tablename));
-          Object[] results = ht.batch(batch);
+          Object[] results = new Object[batch.size()];
+          ht.batch(batch, results);
           for (Object result : results) {
             dataSize += getRowSize((Result)result);
           }
