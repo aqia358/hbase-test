@@ -61,6 +61,7 @@ public class HTest {
         options.addOption("t", "tablename", true, "File to save program output to");
         options.addOption("f", "family", true, "File to save program output to");
         options.addOption("F", "file", true, "File to save program output to");
+        options.addOption("b", "batchSize", true, "File to save program output to");
         // Parse the program arguments
         CommandLine commandLine = parser.parse(options, args);
 
@@ -71,14 +72,16 @@ public class HTest {
         String family = commandLine.getOptionValue("q", "f");
         String qualiy = commandLine.getOptionValue("q", "features");
         String file = commandLine.getOptionValue("F", "features");
+        int batchSize = Integer.valueOf(commandLine.getOptionValue("b", "250"));
 
-        reporter.start(1, TimeUnit.SECONDS);
+        reporter.start(10, TimeUnit.SECONDS);
 
         readFile(file);
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
 //        testBatchGet(family, qualiy, tablename, connection);
-        testGet(family, qualiy, tablename, connection);
+//        testGet(family, qualiy, tablename, connection);
+        testBatch(family, qualiy, tablename, connection, batchSize);
 
     }
 
@@ -103,6 +106,36 @@ public class HTest {
                     System.out.println("result:" + results.length + ", time:" + (e - s));
                     return null;
                 });
+            }
+        }
+
+    }
+
+    public static void testBatch(String family, String qualiy, String tablename, Connection connection, int batchSize) throws Exception {
+        byte[] hFamily = Bytes.toBytes(family);
+        byte[] hQualiy = Bytes.toBytes(qualiy);
+        Table ht = connection.getTable(TableName.valueOf(tablename));
+        for (int i = 0; i < 10000; i++) {
+            List<Row> batch = new ArrayList<Row>();
+            int count = 0;
+            for (String key : keylist) {
+                if (count > batchSize) {
+                    t.time((Callable<Void>) () -> {
+                        long s = System.currentTimeMillis();
+                        Object[] results = new Object[batch.size()];
+                        ht.batch(batch, results);
+                        long e = System.currentTimeMillis();
+                        System.out.println("result:" + results.length + ", time:" + (e - s));
+                        return null;
+                    });
+                    count = 0;
+                    batch.clear();
+                } else {
+                    byte[] rowkey = Bytes.toBytes(key);
+                    Get get = new Get(rowkey);
+                    get.addColumn(hFamily, hQualiy);
+                    batch.add(get);
+                }
             }
         }
 
@@ -133,6 +166,7 @@ public class HTest {
         }
 
     }
+
 //    Result result = table.get(get);
 
 }
