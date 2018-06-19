@@ -117,9 +117,8 @@ public class HTest {
         Table ht = connection.getTable(TableName.valueOf(tablename));
         for (int i = 0; i < 10000; i++) {
             List<Row> batch = new ArrayList<Row>();
-            int count = 0;
             for (String key : keylist) {
-                if (count > batchSize) {
+                if (batch.size() > batchSize) {
                     t.time((Callable<Void>) () -> {
                         long s = System.currentTimeMillis();
                         Object[] results = new Object[batch.size()];
@@ -128,14 +127,12 @@ public class HTest {
                         System.out.println("result:" + results.length + ", time:" + (e - s));
                         return null;
                     });
-                    count = 0;
                     batch.clear();
                 } else {
                     byte[] rowkey = Bytes.toBytes(key);
                     Get get = new Get(rowkey);
                     get.addColumn(hFamily, hQualiy);
                     batch.add(get);
-                    count += 1;
                 }
             }
         }
