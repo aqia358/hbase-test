@@ -135,6 +135,7 @@ public class HTest {
                     Get get = new Get(rowkey);
                     get.addColumn(hFamily, hQualiy);
                     batch.add(get);
+                    count += 1;
                 }
             }
         }
