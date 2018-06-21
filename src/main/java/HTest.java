@@ -15,9 +15,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class HTest {
 
+    public static String format = "yyyy-MM-dd HH:mm:ss";
     public static final LinkedBlockingQueue<String> keylist = new LinkedBlockingQueue<String>();
     public static MetricRegistry registry = new MetricRegistry();
     public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
@@ -25,6 +28,11 @@ public class HTest {
             .convertDurationsTo(TimeUnit.MILLISECONDS)
             .build();
     public static Timer t = registry.timer("test");
+
+    public static String timeStamp2Date(long seconds) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(new Date(seconds));
+    }
 
     private static void readFile(String path) {
         File file = new File(path.trim());
@@ -103,7 +111,7 @@ public class HTest {
                     Object[] results = new Object[batch.size()];
                     ht.batch(batch, results);
                     long e = System.currentTimeMillis();
-                    System.out.println("result:" + results.length + ", time:" + (e - s));
+                    System.out.println("start time:" + timeStamp2Date(s) + "end time:" + timeStamp2Date(e) + ", result:" + results.length + ", time:" + (e - s));
                     return null;
                 });
             }
@@ -125,7 +133,7 @@ public class HTest {
                         Object[] results = new Object[batch.size()];
                         ht.batch(batch, results);
                         long e = System.currentTimeMillis();
-                        System.out.println("result:" + results.length + ", time:" + (e - s));
+                        System.out.println("start time:" + timeStamp2Date(s) + "end time:" + timeStamp2Date(e) + ", result:" + results.length + ", time:" + (e - s));
                         return null;
                     });
                     batch.clear();
@@ -156,7 +164,7 @@ public class HTest {
                         long s = System.currentTimeMillis();
                         Result result = ht.get(get);
                         long e = System.currentTimeMillis();
-                        System.out.println("result:" + 1 + ", time:" + (e - s));
+                        System.out.println("start time:" + timeStamp2Date(s) + "end time:" + timeStamp2Date(e) + ", result:" + 1 + ", time:" + (e - s));
                         return null;
                     });
                 }
