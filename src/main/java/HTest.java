@@ -116,6 +116,7 @@ public class HTest {
         byte[] hQualiy = Bytes.toBytes(qualiy);
         Table ht = connection.getTable(TableName.valueOf(tablename));
         for (int i = 0; i < 10000; i++) {
+            System.out.println("------------------NO " + i + " round--------------------");
             List<Row> batch = new ArrayList<Row>();
             for (String key : keylist) {
                 if (batch.size() > batchSize) {
