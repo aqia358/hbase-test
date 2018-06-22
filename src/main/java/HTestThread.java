@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
+import sun.jvm.hotspot.utilities.WorkerThread;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -18,9 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class HTestThread {
 
@@ -86,25 +85,34 @@ public class HTestThread {
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
 
-
-        List<Thread> threadList = Lists.newArrayList();
-        for (int i = 0; i < threads; i++) {
-            HbaseJob bg = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
-            Thread td = new Thread(bg);
-            td.start();
-            threadList.add(td);
-            log.info("Start thread " + i);
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 10; i++) {
+            HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
+            executor.execute(worker);
         }
-
-        long startTime = System.currentTimeMillis();
-        System.out.println("Test start time: " + timeStamp2Date(startTime));
-        for (Thread t : threadList) {
-            try {
-                t.join();
-            } catch (Exception e) {
-                log.error("Join thread fail", e);
-            }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
         }
+        System.out.println("Finished all threads");
+//
+//        List<Thread> threadList = Lists.newArrayList();
+//        for (int i = 0; i < threads; i++) {
+//            HbaseJob bg = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
+//            Thread td = new Thread(bg);
+//            td.start();
+//            threadList.add(td);
+//            log.info("Start thread " + i);
+//        }
+//
+//        long startTime = System.currentTimeMillis();
+//        System.out.println("Test start time: " + timeStamp2Date(startTime));
+//        for (Thread t : threadList) {
+//            try {
+//                t.join();
+//            } catch (Exception e) {
+//                log.error("Join thread fail", e);
+//            }
+//        }
 
     }
 
