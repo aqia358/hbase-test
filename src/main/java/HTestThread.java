@@ -86,9 +86,7 @@ public class HTestThread {
         ExecutorService executor = Executors.newFixedThreadPool(5);
         for (int i = 0; i < 10; i++) {
             HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
-            Thread t = new Thread(worker);
-            t.setName("liuhl_hbase_test_" + i);
-            executor.execute(t);
+            executor.execute(worker);
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
@@ -144,6 +142,7 @@ public class HTestThread {
         @Override
         public void run() {
             try {
+                System.out.println(Thread.currentThread().getName()+" End.");
                 testBatch(family, qualiy, tablename, connection, batchSize);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -155,6 +154,7 @@ public class HTestThread {
             byte[] hQualiy = Bytes.toBytes(qualiy);
             Table ht = connection.getTable(TableName.valueOf(tablename));
             for (int i = 0; i < 10000; i++) {
+                System.out.println(Thread.currentThread().getName()+" End.");
                 System.out.println("------------------NO " + i + " round--------------------");
                 List<Row> batch = new ArrayList<Row>();
                 for (String key : keys) {
