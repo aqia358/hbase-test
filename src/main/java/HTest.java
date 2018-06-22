@@ -68,6 +68,7 @@ public class HTest {
         options.addOption("P", "port", true, "File to save program output to");
         options.addOption("t", "tablename", true, "File to save program output to");
         options.addOption("f", "family", true, "File to save program output to");
+        options.addOption("q", "qualify", true, "File to save program output to");
         options.addOption("F", "file", true, "File to save program output to");
         options.addOption("b", "batchSize", true, "File to save program output to");
         // Parse the program arguments
@@ -78,7 +79,7 @@ public class HTest {
         String parent = commandLine.getOptionValue("p", "/hbase");
         String tablename = commandLine.getOptionValue("t", "fg_user_features_hbase");
         String family = commandLine.getOptionValue("f", "f");
-        String qualiy = commandLine.getOptionValue("q", "features");
+        String qualify = commandLine.getOptionValue("q", "qualify");
         String file = commandLine.getOptionValue("F", "features");
         int batchSize = Integer.valueOf(commandLine.getOptionValue("b", "250"));
 
@@ -87,15 +88,15 @@ public class HTest {
         readFile(file);
 
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
-//        testBatchGet(family, qualiy, tablename, connection);
-//        testGet(family, qualiy, tablename, connection);
-        testBatch(family, qualiy, tablename, connection, batchSize);
+//        testBatchGet(family, qualify, tablename, connection);
+//        testGet(family, qualify, tablename, connection);
+        testBatch(family, qualify, tablename, connection, batchSize);
 
     }
 
-    public static void testBatchGet(String family, String qualiy, String tablename, Connection connection) throws Exception {
+    public static void testBatchGet(String family, String qualify, String tablename, Connection connection) throws Exception {
         byte[] hFamily = Bytes.toBytes(family);
-        byte[] hQualiy = Bytes.toBytes(qualiy);
+        byte[] hqualify = Bytes.toBytes(qualify);
         Table ht = connection.getTable(TableName.valueOf(tablename));
         for (int i = 0; i < 100; i++) {
             for (String keys : keylist) {
@@ -103,7 +104,7 @@ public class HTest {
                 for (String key : keys.split(",")) {
                     byte[] rowkey = Bytes.toBytes(key);
                     Get get = new Get(rowkey);
-                    get.addColumn(hFamily, hQualiy);
+                    get.addColumn(hFamily, hqualify);
                     batch.add(get);
                 }
                 t.time((Callable<Void>) () -> {
@@ -119,9 +120,9 @@ public class HTest {
 
     }
 
-    public static void testBatch(String family, String qualiy, String tablename, Connection connection, int batchSize) throws Exception {
+    public static void testBatch(String family, String qualify, String tablename, Connection connection, int batchSize) throws Exception {
         byte[] hFamily = Bytes.toBytes(family);
-        byte[] hQualiy = Bytes.toBytes(qualiy);
+        byte[] hqualify = Bytes.toBytes(qualify);
         Table ht = connection.getTable(TableName.valueOf(tablename));
         for (int i = 0; i < 10000; i++) {
             System.out.println("------------------NO " + i + " round--------------------");
@@ -140,7 +141,7 @@ public class HTest {
                 } else {
                     byte[] rowkey = Bytes.toBytes(key);
                     Get get = new Get(rowkey);
-                    get.addColumn(hFamily, hQualiy);
+                    get.addColumn(hFamily, hqualify);
                     batch.add(get);
                 }
             }
@@ -148,9 +149,9 @@ public class HTest {
 
     }
 
-    public static void testGet(String family, String qualiy, String tablename, Connection connection) throws Exception {
+    public static void testGet(String family, String qualify, String tablename, Connection connection) throws Exception {
         byte[] hFamily = Bytes.toBytes(family);
-        byte[] hQualiy = Bytes.toBytes(qualiy);
+        byte[] hqualify = Bytes.toBytes(qualify);
         Table ht = connection.getTable(TableName.valueOf(tablename));
         for (int i = 0; i < 100; i++) {
             for (String keys : keylist) {
@@ -158,7 +159,7 @@ public class HTest {
                 for (String key : keys.split(",")) {
                     byte[] rowkey = Bytes.toBytes(key);
                     Get get = new Get(rowkey);
-                    get.addColumn(hFamily, hQualiy);
+                    get.addColumn(hFamily, hqualify);
                     batch.add(get);
                     t.time((Callable<Void>) () -> {
                         long s = System.currentTimeMillis();
