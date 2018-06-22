@@ -77,8 +77,8 @@ public class HTest {
         String port = commandLine.getOptionValue("P", "2181");
         String parent = commandLine.getOptionValue("p", "/hbase");
         String tablename = commandLine.getOptionValue("t", "fg_user_features_hbase");
-        String family = commandLine.getOptionValue("q", "f");
-        String qualiy = commandLine.getOptionValue("f", "features");
+        String family = commandLine.getOptionValue("f", "f");
+        String qualiy = commandLine.getOptionValue("q", "features");
         String file = commandLine.getOptionValue("F", "features");
         int batchSize = Integer.valueOf(commandLine.getOptionValue("b", "250"));
 
