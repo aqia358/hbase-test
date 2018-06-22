@@ -1,7 +1,6 @@
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -11,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
-import sun.jvm.hotspot.utilities.WorkerThread;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -88,7 +86,9 @@ public class HTestThread {
         ExecutorService executor = Executors.newFixedThreadPool(5);
         for (int i = 0; i < 10; i++) {
             HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
-            executor.execute(worker);
+            Thread t = new Thread(worker);
+            t.setName("liuhl_hbase_test_" + i);
+            executor.execute(t);
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
