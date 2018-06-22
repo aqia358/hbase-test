@@ -87,6 +87,16 @@ public class HTest {
 
         readFile(file);
 
+        System.out.println("+++++++++++++++++++++++++++++++++");
+        System.out.println(zookeeper);
+        System.out.println(port);
+        System.out.println(parent);
+        System.out.println(tablename);
+        System.out.println(family);
+        System.out.println(qualify);
+        System.out.println(file);
+        System.out.println(batchSize);
+        System.out.println("+++++++++++++++++++++++++++++++++");
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
 //        testBatchGet(family, qualify, tablename, connection);
 //        testGet(family, qualify, tablename, connection);
