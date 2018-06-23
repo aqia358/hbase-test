@@ -1,6 +1,7 @@
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -65,6 +66,7 @@ public class HTestThread {
         options.addOption("F", "file", true, "File to save program output to");
         options.addOption("b", "batchSize", true, "File to save program output to");
         options.addOption("T", "thread", true, "File to save program output to");
+        options.addOption("n", "nThread", true, "File to save program output to");
         // Parse the program arguments
         CommandLine commandLine = parser.parse(options, args);
 
@@ -77,41 +79,37 @@ public class HTestThread {
         String file = commandLine.getOptionValue("F", "features");
         int batchSize = Integer.valueOf(commandLine.getOptionValue("b", "250"));
         int threads = Integer.valueOf(commandLine.getOptionValue("T", "10"));
+        int nThreads = Integer.valueOf(commandLine.getOptionValue("n", "10"));
 
 
 
+        nThreads = Runtime.getRuntime().availableProcessors() * 4;
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setDaemon(true).setNameFormat("liuhl-internal-pol-%d").build();
+        ExecutorService service = new ForkJoinPool(nThreads * 2);
+        Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port), service);
+        TableName tableName = TableName.valueOf(tablename);
+        warmUpConnectionCache(connection, tableName);
 
-        Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port));
-
-        ExecutorService executor = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 10; i++) {
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads, threadFactory);
+        for (int i = 0; i < threads; i++) {
             HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
             executor.execute(worker);
         }
-        executor.shutdown();
         while (!executor.isTerminated()) {
         }
+        executor.shutdown();
+        service.shutdownNow();
         System.out.println("Finished all threads");
-//
-//        List<Thread> threadList = Lists.newArrayList();
-//        for (int i = 0; i < threads; i++) {
-//            HbaseJob bg = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
-//            Thread td = new Thread(bg);
-//            td.start();
-//            threadList.add(td);
-//            log.info("Start thread " + i);
-//        }
-//
-//        long startTime = System.currentTimeMillis();
-//        System.out.println("Test start time: " + timeStamp2Date(startTime));
-//        for (Thread t : threadList) {
-//            try {
-//                t.join();
-//            } catch (Exception e) {
-//                log.error("Join thread fail", e);
-//            }
-//        }
 
+    }
+
+    public static void warmUpConnectionCache(Connection connection, TableName tn) throws IOException {
+        try (RegionLocator locator = connection.getRegionLocator(tn)) {
+            log.info(
+                    "Warmed up region location cache for " + tn
+                            + " got " + locator.getAllRegionLocations().size());
+        }
     }
 
     static class HbaseJob implements Runnable {
@@ -120,6 +118,7 @@ public class HTestThread {
         private String qualiy;
         private String tablename;
         private int batchSize;
+        private String name;
         public LinkedBlockingQueue<String> keys;
         public static MetricRegistry registry = new MetricRegistry();
         public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
@@ -134,6 +133,7 @@ public class HTestThread {
             this.qualiy = qualiy;
             this.tablename = tablename;
             this.batchSize = batchSize;
+            this.name = name;
             keys = readFile(path);
             reporter.start(10, TimeUnit.SECONDS);
             t = registry.timer(name);
@@ -152,20 +152,20 @@ public class HTestThread {
         public void testBatch(String family, String qualiy, String tablename, Connection connection, int batchSize) throws Exception {
             byte[] hFamily = Bytes.toBytes(family);
             byte[] hQualiy = Bytes.toBytes(qualiy);
-            Table ht = connection.getTable(TableName.valueOf(tablename));
             for (int i = 0; i < 10000; i++) {
                 System.out.println(Thread.currentThread().getName()+" End.");
                 System.out.println("------------------NO " + i + " round--------------------");
                 List<Row> batch = new ArrayList<Row>();
                 for (String key : keys) {
                     if (batch.size() > batchSize) {
+                        Table ht = connection.getTable(TableName.valueOf(tablename));
                         t.time((Callable<Void>) () -> {
                             long s = System.currentTimeMillis();
                             Object[] results = new Object[batch.size()];
                             ht.batch(batch, results);
                             long e = System.currentTimeMillis();
-                            System.out.println("start time:" + timeStamp2Date(s) + "end time:" + timeStamp2Date(e) + ", result:" + results.length + ", time:" + (e - s));
-                            log.info("start time:" + timeStamp2Date(s) + "end time:" + timeStamp2Date(e) + ", result:" + results.length + ", time:" + (e - s));
+                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
+                            log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             return null;
                         });
                         batch.clear();
