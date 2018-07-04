@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="60">    <!--https://stackoverflow.com/questions/43940700/log4j2-monitorinterval-performance-->
+    <Properties>
+        <Property name="appName">ai-urs-ranker</Property>
+        <Property name="basePath">logs/</Property>
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="fileLogger" fileName="${basePath}/${appName}.log" filePattern="${basePath}/${appName}-%d{yyyy-MM-dd}.log">
+            <PatternLayout>
+                <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+        <Policies>
+            <TimeBasedTriggeringPolicy />
+            <SizeBasedTriggeringPolicy size="256 MB"/>
+        </Policies>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout   pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.tantan.common.dao.hbase.HBaseClient" level="INFO" additivity="false">
+            <AppenderRef ref="fileLogger"/>
+        </Logger>
+        <Root level="WARN" additivity="false">
+            <appenderref ref="fileLogger" />
+        </Root>
+    </Loggers>
+</Configuration>
