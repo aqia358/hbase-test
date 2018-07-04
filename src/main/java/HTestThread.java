@@ -171,10 +171,12 @@ public class HTestThread {
                         t.time((Callable<Void>) () -> {
                             long s = System.currentTimeMillis();
                             Object[] results = new Object[batch.size()];
+                            log.info(results);
                             ht.batch(batch, results);
                             long e = System.currentTimeMillis();
-                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
+//                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
+                            log.info(results);
                             return null;
                         });
                         batch.clear();
