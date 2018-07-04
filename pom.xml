@@ -89,6 +89,12 @@
             <id>cloudera-releases</id>
             <url>https://repository.cloudera.com/content/repositories/releases/</url>
         </repository>
+        <repository>
+            <id>releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://localhost:8081/repository/maven-releases</url>
+        </repository>
+
     </repositories>
 
     <build>
