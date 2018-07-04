@@ -11,6 +11,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -21,6 +24,11 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class HTestThread {
+
+    static {
+        PropertyConfigurator.configure(System.getProperty("user.dir") + File.separator + "conf" + File.separator + "log4j.properties");
+    }
+
 
     public static String format = "yyyy-MM-dd HH:mm:ss";
     public static final LinkedBlockingQueue<String> keylist = new LinkedBlockingQueue<String>();
@@ -55,6 +63,7 @@ public class HTestThread {
     }
 
     public static void main(String[] args) throws Exception {
+        Logger.getRootLogger().setLevel(Level.DEBUG);
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
         options.addOption("h", "help", false, "Print this usage information");
