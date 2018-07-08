@@ -13,6 +13,11 @@ public class HbaseConnect {
     HBASE_CONFIG.setInt("hbase.client.prefetch.limit", 100);
     HBASE_CONFIG.setInt("hbase.rpc.timeout", 600000);
 
+    HBASE_CONFIG.setBoolean("hbase.ipc.client.allowsInterrupt", true);
+    HBASE_CONFIG.setInt("hbase.client.primaryCallTimeout.get", 10000);
+    HBASE_CONFIG.setInt("hbase.client.primaryCallTimeout.multiget", 10000);
+    HBASE_CONFIG.setInt("hbase.client.replicaCallTimeout.scan", 100000);
+
     Configuration configuration = HBaseConfiguration.create(HBASE_CONFIG);
     return configuration;
   }

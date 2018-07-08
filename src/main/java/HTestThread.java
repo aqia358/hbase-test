@@ -183,6 +183,7 @@ public class HTestThread {
                     } else {
                         byte[] rowkey = Bytes.toBytes(key);
                         Get get = new Get(rowkey);
+                        get.setConsistency(Consistency.TIMELINE);
                         get.addColumn(hFamily, hQualiy);
                         batch.add(get);
                     }
