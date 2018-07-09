@@ -177,7 +177,7 @@ public class HTestThread {
                             int staleCount = 0;
                             int unStaleCount = 0;
                             for (Result r: results) {
-                                if (r.isStale()) {
+                                if (r != null && r.isStale()) {
                                     staleCount += 1;
                                 } else {
                                     unStaleCount += 1;
