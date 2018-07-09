@@ -170,13 +170,23 @@ public class HTestThread {
                         Table ht = connection.getTable(TableName.valueOf(tablename));
                         t.time((Callable<Void>) () -> {
                             long s = System.currentTimeMillis();
-                            Object[] results = new Object[batch.size()];
+                            Result[] results = new Result[batch.size()];
                             log.info(results);
                             ht.batch(batch, results);
+
+                            int staleCount = 0;
+                            int unStaleCount = 0;
+                            for (Result r: results) {
+                                if (r.isStale()) {
+                                    staleCount += 1;
+                                } else {
+                                    unStaleCount += 1;
+                                }
+                            }
+                            log.info("liuhl stale count:" + staleCount + ", un stale count:" + unStaleCount);
                             long e = System.currentTimeMillis();
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
-                            log.info(results);
                             return null;
                         });
                         batch.clear();
