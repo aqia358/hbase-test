@@ -174,16 +174,21 @@ public class HTestThread {
                             log.info(results);
                             ht.batch(batch, results);
 
+                            int nullCount = 0;
                             int staleCount = 0;
                             int unStaleCount = 0;
                             for (Result r: results) {
-                                if (r != null && r.isStale()) {
+                                if (r == null) {
+                                    nullCount += 1;
+                                    continue;
+                                }
+                                if (r.isStale()) {
                                     staleCount += 1;
                                 } else {
                                     unStaleCount += 1;
                                 }
                             }
-                            log.info("liuhl stale count:" + staleCount + ", un stale count:" + unStaleCount);
+                            log.info("liuhl stale count:" + staleCount + ", un stale count:" + unStaleCount + ", null count:" + nullCount);
                             long e = System.currentTimeMillis();
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
