@@ -94,7 +94,7 @@ public class HTestThread {
 
         nThreads = Runtime.getRuntime().availableProcessors() * 4;
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setDaemon(true).setNameFormat("liuhl-internal-pol-%d").build();
+                .setDaemon(true).setNameFormat("liuhl-user-%d").build();
         ExecutorService service = new ForkJoinPool(nThreads * 2);
         Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port), service);
         TableName tableName = TableName.valueOf(tablename);
@@ -102,7 +102,7 @@ public class HTestThread {
 
         ExecutorService executor = Executors.newFixedThreadPool(nThreads, threadFactory);
         for (int i = 0; i < threads; i++) {
-            HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "thread_" + i);
+            HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "liuhl_hbase_thread_" + i);
             executor.execute(worker);
         }
         while (!executor.isTerminated()) {
@@ -144,7 +144,7 @@ public class HTestThread {
             this.batchSize = batchSize;
             this.name = name;
             keys = readFile(path);
-            reporter.start(10, TimeUnit.SECONDS);
+            reporter.start(10000, TimeUnit.SECONDS);
             t = registry.timer(name);
         }
 
@@ -188,8 +188,8 @@ public class HTestThread {
                                     unStaleCount += 1;
                                 }
                             }
-                            log.info("liuhl stale count:" + staleCount + ", un stale count:" + unStaleCount + ", null count:" + nullCount);
                             long e = System.currentTimeMillis();
+                            log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", time:" + (e - s));
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             return null;
