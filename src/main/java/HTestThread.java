@@ -170,26 +170,31 @@ public class HTestThread {
                         Table ht = connection.getTable(TableName.valueOf(tablename));
                         t.time((Callable<Void>) () -> {
                             long s = System.currentTimeMillis();
-                            Result[] results = new Result[batch.size()];
+//                            Result[] results = new Result[batch.size()];
+                            Object[] results = new Object[batch.size()];
                             log.info(results);
                             ht.batch(batch, results);
 
                             int nullCount = 0;
                             int staleCount = 0;
                             int unStaleCount = 0;
-                            for (Result r: results) {
+                            int unknown = 0;
+                            for (Object r: results) {
+                                if (!(r instanceof Result)) {
+                                    unknown += 1;
+                                }
                                 if (r == null) {
                                     nullCount += 1;
                                     continue;
                                 }
-                                if (r.isStale()) {
+                                if (r instanceof Result && ((Result) r).isStale()) {
                                     staleCount += 1;
                                 } else {
                                     unStaleCount += 1;
                                 }
                             }
                             long e = System.currentTimeMillis();
-                            log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", time:" + (e - s));
+                            log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", unkonw:" + unknown + ", time:" + (e - s));
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             return null;

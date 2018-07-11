@@ -21,11 +21,11 @@
             <!--<version>1.2.0-cdh5.12.2</version>-->
         <!--</dependency>-->
         <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-client -->
-        <!--<dependency>-->
-            <!--<groupId>org.apache.hbase</groupId>-->
-            <!--<artifactId>hbase-shaded-client-tt</artifactId>-->
-            <!--<version>1.2.0-cdh5.12.0</version>-->
-        <!--</dependency>-->
+<!--        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client-t10</artifactId>
+            <version>1.2.0-cdh5.12.0</version>
+        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
