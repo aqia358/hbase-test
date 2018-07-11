@@ -91,7 +91,6 @@ public class HTestThread {
         int nThreads = Integer.valueOf(commandLine.getOptionValue("n", "10"));
 
 
-
         nThreads = Runtime.getRuntime().availableProcessors() * 4;
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setDaemon(true).setNameFormat("liuhl-user-%d").build();
@@ -134,7 +133,7 @@ public class HTestThread {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
-        public static Timer t ;
+        public static Timer t;
 
         public HbaseJob(Connection connection, String family, String qualiy, String tablename, int batchSize, String path, String name) {
             this.connection = connection;
@@ -151,7 +150,7 @@ public class HTestThread {
         @Override
         public void run() {
             try {
-                System.out.println(Thread.currentThread().getName()+" End.");
+                System.out.println(Thread.currentThread().getName() + " End.");
                 testBatch(family, qualiy, tablename, connection, batchSize);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -162,43 +161,48 @@ public class HTestThread {
             byte[] hFamily = Bytes.toBytes(family);
             byte[] hQualiy = Bytes.toBytes(qualiy);
             for (int i = 0; i < 10000; i++) {
-                System.out.println(Thread.currentThread().getName()+" End.");
+                System.out.println(Thread.currentThread().getName() + " End.");
                 System.out.println("------------------NO " + i + " round--------------------");
                 List<Row> batch = new ArrayList<Row>();
                 for (String key : keys) {
                     if (batch.size() > batchSize) {
                         Table ht = connection.getTable(TableName.valueOf(tablename));
+                        ht.setOperationTimeout(60);
+                        Object[] results = new Object[batch.size()];
+                        long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
-                            long s = System.currentTimeMillis();
-//                            Result[] results = new Result[batch.size()];
-                            Object[] results = new Object[batch.size()];
-                            log.info(results);
-                            ht.batch(batch, results);
-
-                            int nullCount = 0;
-                            int staleCount = 0;
-                            int unStaleCount = 0;
-                            int unknown = 0;
-                            for (Object r: results) {
-                                if (!(r instanceof Result)) {
-                                    unknown += 1;
-                                }
-                                if (r == null) {
-                                    nullCount += 1;
-                                    continue;
-                                }
-                                if (r instanceof Result && ((Result) r).isStale()) {
-                                    staleCount += 1;
-                                } else {
-                                    unStaleCount += 1;
-                                }
+                            try {
+                                log.info(results);
+                                ht.batch(batch, results);
+                            } catch (IOException e) {
+                                log.error("liuhl hbase batch IOException");
+                            } catch (InterruptedException e) {
+                                log.error("liuhl hbase batch InterruptedException");
                             }
-                            long e = System.currentTimeMillis();
-                            log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", unkonw:" + unknown + ", time:" + (e - s));
-//                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
-                            log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                             return null;
                         });
+                        int nullCount = 0;
+                        int staleCount = 0;
+                        int unStaleCount = 0;
+                        int unknown = 0;
+                        for (Object r : results) {
+                            if (!(r instanceof Result)) {
+                                unknown += 1;
+                            }
+                            if (r == null) {
+                                nullCount += 1;
+                                continue;
+                            }
+                            if (r instanceof Result && ((Result) r).isStale()) {
+                                staleCount += 1;
+                            } else {
+                                unStaleCount += 1;
+                            }
+                        }
+                        long e = System.currentTimeMillis();
+                        log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", unkonw:" + unknown + ", time:" + (e - s));
+//                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
+                        log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                         batch.clear();
                     } else {
                         byte[] rowkey = Bytes.toBytes(key);

@@ -17,8 +17,8 @@ public class HbaseConnect {
     HBASE_CONFIG.setInt("hbase.client.primaryCallTimeout.get", 10000);
     HBASE_CONFIG.setInt("hbase.client.primaryCallTimeout.multiget", 1000);
     HBASE_CONFIG.setInt("hbase.client.replicaCallTimeout.scan", 100000);
-    HBASE_CONFIG.setInt("hbase.client.operation.timeout", 100);
-    HBASE_CONFIG.setInt("hbase.client.retries.number", 1);
+//    HBASE_CONFIG.setInt("hbase.client.operation.timeout", 100);
+//    HBASE_CONFIG.setInt("hbase.client.retries.number", 1);
 
     Configuration configuration = HBaseConfiguration.create(HBASE_CONFIG);
     return configuration;
