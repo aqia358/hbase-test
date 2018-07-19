@@ -11,6 +11,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.htrace.Sampler;
+import org.apache.htrace.Trace;
+import org.apache.htrace.TraceScope;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -170,7 +173,12 @@ public class HTestThread {
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
-                            ht.partialBatch(batch, results, 100000);
+                            TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
+                            try {
+                                ht.partialBatch(batch, results, 100000);
+                            } finally {
+                                ts.close();
+                            }
 //                            try {
 //                                log.info(results);
 //                                ht.batch(batch, results);

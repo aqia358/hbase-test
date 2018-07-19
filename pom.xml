@@ -10,6 +10,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace</artifactId>
+            <version>3.1.0-incubating</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core</artifactId>
+            <version>3.1.0-incubating</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client-tt</artifactId>
             <version>2.0.0</version>
