@@ -167,18 +167,18 @@ public class HTestThread {
                 for (String key : keys) {
                     if (batch.size() > batchSize) {
                         Table ht = connection.getTable(TableName.valueOf(tablename));
-                        ht.setOperationTimeout(60);
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
-                            try {
-                                log.info(results);
-                                ht.batch(batch, results);
-                            } catch (IOException e) {
-                                log.error("liuhl hbase batch IOException");
-                            } catch (InterruptedException e) {
-                                log.error("liuhl hbase batch InterruptedException");
-                            }
+                            ht.partialBatch(batch, results, 100000);
+//                            try {
+//                                log.info(results);
+//                                ht.batch(batch, results);
+//                            } catch (IOException e) {
+//                                log.error("liuhl hbase batch IOException");
+//                            } catch (InterruptedException e) {
+//                                log.error("liuhl hbase batch InterruptedException");
+//                            }
                             return null;
                         });
                         int nullCount = 0;
