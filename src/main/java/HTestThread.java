@@ -170,7 +170,9 @@ public class HTestThread {
             conf.set("hbase.zookeeper.quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
             conf.set("hbase.zookeeper.property.clientPort", "2181");
             conf.set("zookeeper.znode.parent", "/hbase-standby");
-
+            conf.set("hbase.htrace.hbase.collector-quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
+            conf.set("hbase.htrace.hbase.zookeeper.property.clientPort", "2181");
+            conf.set("hbase.htrace.hbase.zookeeper.znode.parent", "/hbase-standby");
             SpanReceiverBuilder builder = new SpanReceiverBuilder(new HBaseHTraceConfiguration(conf));
             SpanReceiver receiver = builder.spanReceiverClass(HBaseSpanReceiver.class.getName()).build();
             Trace.addReceiver(receiver);
@@ -190,6 +192,7 @@ public class HTestThread {
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
+                            initHtrace();
                             SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
                             try {
