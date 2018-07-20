@@ -11,7 +11,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.apache.htrace:htrace-core:3.1.0-incubating" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.htrace:htrace-hbase:3.1.0-incubating" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.htrace:htrace-hbase-tt-2.0:3.1.0-incubating" level="project" />
     <orderEntry type="library" name="Maven: org.apache.hbase:hbase-shaded-client-tt:2.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.hbase:hbase-client-tt:2.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.hbase.thirdparty:hbase-shaded-protobuf:2.1.0" level="project" />
