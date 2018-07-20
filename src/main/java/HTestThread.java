@@ -196,7 +196,8 @@ public class HTestThread {
                             SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
                             try {
-                                ht.partialBatch(batch, results, 100000);
+//                                ht.partialBatch(batch, results, 100000);
+                             ht.batch(batch, results);
                             } finally {
                                 ts.close();
                             }
@@ -233,6 +234,7 @@ public class HTestThread {
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                         log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
                         batch.clear();
+                        Thread.sleep(1000);
                     } else {
                         byte[] rowkey = Bytes.toBytes(key);
                         Get get = new Get(rowkey);
