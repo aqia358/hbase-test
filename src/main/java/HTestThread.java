@@ -159,6 +159,7 @@ public class HTestThread {
         public void run() {
             try {
                 System.out.println(Thread.currentThread().getName() + " End.");
+                initHtrace();
                 testBatch(family, qualiy, tablename, connection, batchSize);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -192,7 +193,6 @@ public class HTestThread {
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
-                            initHtrace();
                             SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
                             try {

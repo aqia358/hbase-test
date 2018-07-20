@@ -17,7 +17,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-hbase</artifactId>
+            <artifactId>htrace-hbase-tt</artifactId>
             <version>3.1.0-incubating</version>
             <exclusions>
                 <exclusion>
