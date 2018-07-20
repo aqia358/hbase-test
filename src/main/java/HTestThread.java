@@ -8,12 +8,14 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.trace.SpanReceiverHost;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.htrace.Sampler;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
+import org.apache.htrace.*;
+import org.apache.htrace.impl.HBaseSpanReceiver;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -98,13 +100,14 @@ public class HTestThread {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setDaemon(true).setNameFormat("liuhl-user-%d").build();
         ExecutorService service = new ForkJoinPool(nThreads * 2);
-        Connection connection = ConnectionFactory.createConnection(HbaseConnect.connection(zookeeper, parent, port), service);
+        Configuration conf = HbaseConnect.connection(zookeeper, parent, port);
+        Connection connection = ConnectionFactory.createConnection(conf, service);
         TableName tableName = TableName.valueOf(tablename);
         warmUpConnectionCache(connection, tableName);
 
         ExecutorService executor = Executors.newFixedThreadPool(nThreads, threadFactory);
         for (int i = 0; i < threads; i++) {
-            HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "liuhl_hbase_thread_" + i);
+            HbaseJob worker = new HbaseJob(connection, family, qualiy, tablename, batchSize, file, "liuhl_hbase_thread_" + i, conf);
             executor.execute(worker);
         }
         while (!executor.isTerminated()) {
@@ -130,6 +133,7 @@ public class HTestThread {
         private String tablename;
         private int batchSize;
         private String name;
+        private Configuration conf;
         public LinkedBlockingQueue<String> keys;
         public static MetricRegistry registry = new MetricRegistry();
         public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
@@ -138,7 +142,7 @@ public class HTestThread {
                 .build();
         public static Timer t;
 
-        public HbaseJob(Connection connection, String family, String qualiy, String tablename, int batchSize, String path, String name) {
+        public HbaseJob(Connection connection, String family, String qualiy, String tablename, int batchSize, String path, String name, Configuration conf) {
             this.connection = connection;
             this.family = family;
             this.qualiy = qualiy;
@@ -148,6 +152,7 @@ public class HTestThread {
             keys = readFile(path);
             reporter.start(10000, TimeUnit.SECONDS);
             t = registry.timer(name);
+            this.conf = conf;
         }
 
         @Override
@@ -158,6 +163,18 @@ public class HTestThread {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        public void initHtrace() {
+            Configuration conf = HBaseConfiguration.create();
+            conf.set("hbase.zookeeper.quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
+            conf.set("hbase.zookeeper.property.clientPort", "2181");
+            conf.set("zookeeper.znode.parent", "/hbase-standby");
+
+            SpanReceiverBuilder builder = new SpanReceiverBuilder(new HBaseHTraceConfiguration(conf));
+            SpanReceiver receiver = builder.spanReceiverClass(HBaseSpanReceiver.class.getName()).build();
+            Trace.addReceiver(receiver);
+
         }
 
         public void testBatch(String family, String qualiy, String tablename, Connection connection, int batchSize) throws Exception {
@@ -173,6 +190,7 @@ public class HTestThread {
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
+                            SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
                             try {
                                 ht.partialBatch(batch, results, 100000);
