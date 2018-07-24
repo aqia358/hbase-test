@@ -192,12 +192,15 @@ public class HTestThread {
                 List<Row> batch = new ArrayList<Row>();
                 for (String key : keys) {
                     if (batch.size() > batchSize) {
+                        List<Long> list = new ArrayList<>();
                         Table ht = connection.getTable(TableName.valueOf(tablename));
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
                             SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
+                            long traceId = ts.getSpan().getTraceId();
+                            list.add(traceId);
                             try {
 //                                ht.partialBatch(batch, results, 100000);
                              ht.batch(batch, results);
@@ -233,9 +236,13 @@ public class HTestThread {
                             }
                         }
                         long e = System.currentTimeMillis();
-                        log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", unkonw:" + unknown + ", time:" + (e - s));
+                        StringBuilder sb = new StringBuilder();
+                        for (long id: list) {
+                            sb.append(String.valueOf(id));
+                        }
+                        log.info("liuhl stale_count:" + staleCount + ", unstale_count:" + unStaleCount + ", null_count:" + nullCount + ", unkonw:" + unknown + ", traceid:" + sb.toString() + ", time:" + (e - s));
 //                            System.out.println(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
-                        log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", time:" + (e - s));
+                        log.info(name + " start time:" + timeStamp2Date(s) + ", result:" + results.length + ", traceid:" + sb.toString() + ", time:" + (e - s));
                         batch.clear();
                         Thread.sleep(1000);
                     } else {
