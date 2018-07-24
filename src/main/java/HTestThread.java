@@ -16,6 +16,7 @@ import org.apache.hadoop.hbase.trace.SpanReceiverHost;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.htrace.*;
 import org.apache.htrace.impl.HBaseSpanReceiver;
+import org.apache.htrace.impl.ZipkinSpanReceiver;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -176,8 +177,10 @@ public class HTestThread {
             conf.set("hbase.htrace.hbase.zookeeper.znode.parent", "/hbase-standby");
             SpanReceiverBuilder builder = new SpanReceiverBuilder(new HBaseHTraceConfiguration(conf));
             SpanReceiver receiver = builder.spanReceiverClass(HBaseSpanReceiver.class.getName()).build();
-            Trace.addReceiver(receiver);
+            SpanReceiver zipkinReceiver = builder.spanReceiverClass(ZipkinSpanReceiver.class.getName()).build();
 
+            Trace.addReceiver(receiver);
+            Trace.addReceiver(zipkinReceiver);
         }
 
         public void testBatch(String family, String qualiy, String tablename, Connection connection, int batchSize) throws Exception {
