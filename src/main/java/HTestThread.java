@@ -197,7 +197,7 @@ public class HTestThread {
                         Object[] results = new Object[batch.size()];
                         long s = System.currentTimeMillis();
                         t.time((Callable<Void>) () -> {
-                            SpanReceiverHost.getInstance(conf);
+//                            SpanReceiverHost.getInstance(conf);
                             TraceScope ts = Trace.startSpan("Gets", Sampler.ALWAYS);
                             long traceId = ts.getSpan().getTraceId();
                             list.add(traceId);
