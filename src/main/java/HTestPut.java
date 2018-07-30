@@ -35,31 +35,6 @@ public class HTestPut {
         return sdf.format(new Date(seconds));
     }
 
-    private static void readFile(String path) {
-        File file = new File(path.trim());
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
-        BufferedReader reader = new BufferedReader(isr);
-
-        String line = null;
-        try {
-            while (null != (line = reader.readLine())) {
-                keylist.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-//        String keys = "";
-//        String[] a = keys.split(",");
-//        for (String tmp: Arrays.asList(keys.split(",")))
-//            keylist.add(tmp);
-    }
-
     public static void main(String[] args) throws Exception {
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
@@ -75,18 +50,16 @@ public class HTestPut {
         // Parse the program arguments
         CommandLine commandLine = parser.parse(options, args);
 
-        String zookeeper = commandLine.getOptionValue("z", "10.189.200.45");
+        String zookeeper = commandLine.getOptionValue("z", "zk-1.static.bjs-datalake.p1staff.com");
         String port = commandLine.getOptionValue("P", "2181");
-        String parent = commandLine.getOptionValue("p", "/hbase");
-        String tablename = commandLine.getOptionValue("t", "fg_user_features_hbase");
-        String family = commandLine.getOptionValue("f", "f");
-        String qualify = commandLine.getOptionValue("q", "qualify");
+        String parent = commandLine.getOptionValue("p", "/hbase-antispam");
+        String tablename = commandLine.getOptionValue("t", "device_info");
+        String family = commandLine.getOptionValue("f", "cf");
+        String qualify = commandLine.getOptionValue("q", "data");
         String file = commandLine.getOptionValue("F", "features");
         int batchSize = Integer.valueOf(commandLine.getOptionValue("b", "250"));
 
         reporter.start(10, TimeUnit.SECONDS);
-
-        readFile(file);
 
         System.out.println("+++++++++++++++++++++++++++++++++");
         System.out.println(zookeeper);
